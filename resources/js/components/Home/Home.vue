@@ -1,31 +1,92 @@
 <template>
+  <div>
   <div class="row">
     <Sidebar />
     <hr>
-    <h2>Tableau de depot</h2>
+    <h2>Tableau de Dépôt</h2>
     <AjouterArticle />
-   
-    <DataTable v-model:filters="filters" :value="meals" :loading="isLoading" paginator rows="10" :rowsPerPageOptions="[10, 20, 50,100,200]">
+    <DataTable v-model:filters="filters" selectionMode="single" :value="articles" :loading="isLoading" paginator rows="5" :rowsPerPageOptions="[10, 20, 50,100,200]">
       <template #header>
         <span class="p-input-icon-left">
           <i class="pi pi-search" />
           <InputText v-model="filters['global'].value" placeholder="Recherche globale.." />
         </span>
       </template>
+      <Column field="image" header="Image" sortable :filter="true">
+  <template #body="{ data }">
+    <img v-if="data.image" :src="data.image" alt="image" class="imagearticle" />
+    <span v-else>Non image</span>
+  </template>
+</Column>
       <Column field="nom" header="Nom de l'article" sortable :filter="true"></Column>
       <Column field="description" header="Description" sortable :filter="true"></Column>
       <Column field="proprietaire" header="Propriétaire" sortable :filter="true"></Column>
-      <Column field="status" header="Status" sortable :filter="true" :body-style="statusBodyStyle"></Column>
-
-      <Column header="Actions">
-        <template #body="{ rowData }">
-          <i class="bi bi-pen pen" style="color: rgb(170, 22, 170); margin-right: 5px;" @click="addToFavorite(rowData)"></i>
-          <i class="bi bi-trash trash" style="color: red;" @click="addToFavorite(rowData)"></i>
+      <Column header="Status" sortable :filter="true">
+        <template #body="{ data }">
+          <Tag :value="data.status" :severity="getSeverity(data.status)" />
         </template>
       </Column>
+      <Column field="created_at" header="Date de dépôt" sortable :filter="true">
+        <template #body="{ data }">
+          <span>{{ formatDate(data.created_at) }}</span> <span>&nbsp;</span>
+          <span>{{ formatTime(data.created_at) }}</span>
+        </template>
+      </Column>
+      <Column header="Actions">
+    <template #body="{ data }">
+      <i class="bi bi-pen pen" style="color: rgb(170, 22, 170); margin-right: 5px;" @click="editArticle(data)"></i>
+      <i class="bi bi-trash trash" style="color: red;" @click="deleteArticle(data.id)"></i>
+    </template>
+  </Column>
     </DataTable>
     <Toast />
   </div>
+  <Dialog v-if="isEditDialogVisible" :visible.sync="isEditDialogVisible">
+    <div class="dialog">
+        <div class="row">
+          <div class="col-md-6">
+            <h4>Edit Article</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <label for="nom" class="form-label">Nom de l'article :</label>
+            <input type="text" class="form-control" id="nom" v-model="selectedArticle.nom" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <label for="description" class="form-label">Déscription de l'article :</label>
+            <textarea type="text" class="form-control" id="description" v-model="selectedArticle.description" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <label for="proprietaire" class="form-label">Propriétaire :</label>
+            <select class="form-select" id="proprietaire" v-model="selectedArticle.proprietaire">
+              <option value="" disabled selected>Select owner</option>
+              <option v-for="client in clients" :key="client.id" :value="client.nom">{{ client.nom }}</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="status" class="form-label">Status :</label>
+            <select class="form-select" id="status" v-model="selectedArticle.status">
+              <option value="disponible">Disponible</option>
+              <option value="vendu">Vendu</option>
+            </select>
+          </div>
+        </div>
+       
+        <hr />
+        <br />
+        <button type="submit" class="btn btn-outline-primary" @click="saveEditedArticle">
+          <i class="bi bi-floppy"></i> Save
+        </button>
+        <button type="button" class="btn btn-outline-primary" @click="cancelEdit">
+          <i class="bi bi-x-lg"></i> Cancel
+        </button>
+    </div>
+  </Dialog></div>
 </template>
 
 <script setup>
@@ -33,24 +94,42 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import 'primevue/resources/themes/saga-blue/theme.css'; // Import the theme CSS
-import 'primevue/resources/primevue.min.css'; // Import the PrimeVue CSS
+import Dialog from "primevue/dialog";
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
+import Tag from 'primevue/tag';
+import 'primevue/resources/themes/saga-blue/theme.css'; 
+import 'primevue/resources/primevue.min.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "bootstrap-icons/font/bootstrap-icons.css";
 import Sidebar from "../sidebar/Sidebar.vue";
 import { useToast } from "primevue/usetoast";
-import InputText from 'primevue/inputtext'; // Import the InputText component
-import 'primevue/resources/themes/saga-blue/theme.css'; // Import the theme CSS
+import InputText from 'primevue/inputtext';
+import 'primevue/resources/themes/saga-blue/theme.css';
 import 'primevue/resources/primevue.min.css'; 
 import AjouterArticle from '../Meal/AjouterArticle.vue';
+import Button from 'primevue/button';
+import FilePond from 'vue-filepond';
+import 'filepond/dist/filepond.min.css';
+
 const toast = useToast();
-const meals = ref([]);
+const articles = ref([]);
 const isLoading = ref(true);
-const filters = ref({ global: { value: '' } }); // Define filters as a ref
-
+const filters = ref({ global: { value: '' } });
+const isEditDialogVisible = ref(false);
+const selectedArticle = ref(null);
 const authToken = localStorage.getItem('token');
+const getSeverity = (status) => {
+    switch (status) {
+        case 'disponible':
+            return 'success';
+        case 'vendu':
+            return 'warning';
+        default:
+            return null;
+    }
+};
 
-const getMeals = async () => {
+const getArticles = async () => {
   try {
     const response = await axios.get("/api/meal",{
       headers: {
@@ -58,7 +137,7 @@ const getMeals = async () => {
       }
     });
     console.log(response.data); // Log the API response
-    meals.value = response.data;
+    articles.value = response.data;
     isLoading.value = false;
   } catch (error) {
     console.error(error);
@@ -104,31 +183,60 @@ const addToFavorite = async (meal) => {
 };
 
 onMounted(() => {
-  getMeals();
-  //setFavoriteStatus();
+  getArticles();
 });
-const statusBodyStyle = (rowData) => {
-  return {
-    backgroundColor: rowData.status === 'vendu' ? 'yellow' : (rowData.status === 'disponible' ? 'green' : ''),
-  };
-};
-const setFavoriteStatus = async () => {
+
+const deleteArticle = async (id) => {
   try {
-    const response = await axios.get("/api/favoritemeals", {
+    const authToken = localStorage.getItem("token");
+    await axios.delete(`/api/article/${id}`, {
       headers: {
-        'Authorization': `Bearer ${authToken}`
-      }
+        Authorization: `Bearer ${authToken}`,
+      },
     });
-
-    const favoriteMealIds = response.data.map(favorite => favorite.meal_id);
-
-    // Set isFavorite property for each meal based on the database
-    meals.value.forEach(meal => {
-      meal.isFavorite = favoriteMealIds.includes(meal.id);
+    getArticles();
+    toast.add({
+      severity: "success",
+      summary: "Article supprimée avec succès",
+      life: 5000,
     });
-
   } catch (error) {
     console.error(error);
+    toast.add({
+      severity: "error",
+      summary: "Erreur lors de la suppression de l'article",
+      life: 5000,
+    });
+  }
+};
+const editArticle = (article) => {
+  console.log(article);
+  selectedArticle.value = article ;
+  isEditDialogVisible.value = true;
+};
+
+const saveEditedArticle = async () => {
+  try {
+      
+          const authToken = localStorage.getItem('token'); // Adjust based on how you store your token
+         await axios.put(`/api/meal/${selectedArticle.value.id}`, selectedArticle.value, {
+     headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+          await toast.add({
+              severity: "success",
+              summary: "Article updated successfully",
+              life: 5000,
+          });
+
+          console.log("Article updated successfully");
+          getArticles();
+          isEditDialogVisible.value = false;
+       
+  } catch (error) {
+      console.error(error);
   }
 };
 const formatDate = (dateString) => {
@@ -139,40 +247,73 @@ const formatTime = (dateTimeString) => {
   const options = { hour: 'numeric', minute: 'numeric'};
   return new Date(dateTimeString).toLocaleTimeString(undefined, options);
 };
+
+const handleFilePondInit = async() => {
+     
+     if (selectedArticle.value.image) {
+     
+       myFiles.value = [
+     {
+       source: selectedArticle.value.image,
+       options: { type: 'local' }
+     }
+     ]
+    }
+     }
+const serverOptions = () => { 
+return {
+    load: (source, load, error, progress, abort, headers) => {
+                    var myRequest = new Request(source);
+                    fetch(myRequest).then(function(response) {
+                      response.blob().then(function(myBlob) {
+                        load(myBlob);
+                      });
+                    });
+                  },
+process: (fieldName, file, metadata, load, error, progress, abort) => {
+const data = new FormData();
+data.append('file', file);
+data.append('upload_preset', 'dischdiscover_cloudinary');
+data.append('cloud_name', 'dfwtjbdrv');
+data.append('6cd43ddcc1a5e3927a5a5e5e28f4ad', file.name);
+axios.post('https://api.cloudinary.com/v1_1/dfwtjbdrv/upload',data)
+.then((response) => response.data)
+.then((data) => {
+console.log(data);
+
+selectedArticle.value.image = data.url;
+load(data);
+})
+.catch((error) => {
+console.error('Error uploading file:', error);
+error('Upload failed');
+abort();
+});
+},
+};
+};
+const cancelEdit = () => {
+  isEditDialogVisible.value = false;
+};
 </script>
 
 <style lang="css" scoped>
-.card-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.card {
-  margin-top: 2rem;
-  border-radius: 15px;
-  transition: 0.5s;
-  width: 30em;
-  margin-bottom: 1rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.p-card-content {
-  overflow-y: auto; /* Add overflow-y property for vertical scroll */
-  max-height: 10px;
-
-}
-
-.card:hover {
-  transform: scale(1.02);
-}
-
-.star {
-  color: rgb(59, 0, 59);
-  font-size: 1.5rem;
+.imagearticle {
+  width: 50px;
+  height: 50px;
+  border-radius: 20px;
+  object-fit: cover;
   cursor: pointer;
 }
+.p-tag-success {
+  background-color: #CAF1D8;
+  color: #188A42;
+}
+.p-tag-warning {
+  background-color: #FEDDC7;
+  color: #AE510F;
+}
+
 h2{
   text-align: center;
   margin-top: 2rem;
@@ -209,20 +350,16 @@ h2{
   font-weight: 600;
   
 }
-.card p {
-  max-height: 100px; /* Set the maximum height */
-  overflow-y: auto;
-}
 span{
   font-size: 0.9rem;
   color: rgb(59, 0, 59);
   font-weight: 600;
 }
-.imagemeal{
+.imagearticle{
   cursor: pointer;
  
 }
-.imagemeal:hover{
+.imagearticle:hover{
   transform: scale(1.1);
   transition: 0.5s;
 }

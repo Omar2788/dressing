@@ -78,19 +78,19 @@ class MealController extends Controller
     
 
 
-    public function deleteMeal($id)
+    public function deleteArticle($id)
 {
     $user = Auth::user();
-    $meal = $user->meal()->find($id);
+    $article = $user->article()->find($id);
     
 
-    if (!$meal) {
-        return response()->json(['error' => 'Meal not found.'], 404);
+    if (!$article) {
+        return response()->json(['error' => 'article not found.'], 404);
     }
 
-    $meal->delete();
+    $article->delete();
 
-    return response()->json('Meal deleted successfully.');
+    return response()->json('article deleted successfully.');
 }
 
 

@@ -42,10 +42,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    public function meal()
+    public function Article()
         {
-            return $this->hasMany(Meal::class, 'user_id');
+            return $this->hasMany(Article::class, 'user_id');
         }
+    public function Client()
+    {
+        return $this->hasMany(Client::class, 'user_id');
+    }
         public function favoriteMeals()
     {
         return $this->hasMany(FavoriteMeal::class, 'user_id');

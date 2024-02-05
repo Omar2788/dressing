@@ -4,7 +4,7 @@
       <span style="color: rgb(43, 27, 27)">
         <i class="bi bi-plus-circle" style="color: white;"></i>
       </span>
-      Nouveau Depot
+      Nouveau Dépôt
     </button>
     <form>
       <Dialog v-model:visible="visible">
@@ -24,8 +24,13 @@
           <div class="row">
             <div class="col-md-6">
               <label for="proprietaire" class="form-label">Propriétaire :</label>
-              <input type="text" class="form-control" id="proprietaire" v-model="article.proprietaire" />
-            </div>
+        <!-- Use the <select> element for the dropdown -->
+        <select class="form-select" id="proprietaire" v-model="article.proprietaire">
+          <option value="" disabled selected>Select owner</option>
+          <!-- Loop through clients and populate the dropdown -->
+          <option v-for="client in clients" :key="client.id" :value="client.nom">{{ client.nom }}</option>
+        </select>
+      </div>
             <div class="col-md-6">
               <label for="status" class="form-label">Status :</label>
               <select class="form-select" id="status" v-model="article.status">
@@ -48,7 +53,7 @@
           </div>
           <hr />
           <br />
-          <button type="submit" class="btn btn-outline-primary" @click="addMeal">
+          <button type="submit" class="btn btn-outline-primary" @click="addArticle">
               <i class="bi bi-floppy"></i> Save
             </button>
             
@@ -58,6 +63,7 @@
       </Dialog>
     </form>
   </div>
+  <Toast />
 </template>
 
 <script setup>
@@ -65,12 +71,22 @@ import { ref, onMounted } from "vue";
 import vueFilePond from "vue-filepond";
 import "filepond/dist/filepond.min.css";
 import Dialog from "primevue/dialog";
+import "primevue/resources/themes/saga-blue/theme.css";
+import "primevue/resources/primevue.min.css";
+import "primeicons/primeicons.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
+import { useToast } from "primevue/usetoast";
+const toast = useToast();
 const FilePond = vueFilePond(FilePondPluginImagePreview);
 const myFiles = ref([]);
 import axios from "axios";
 const visible = ref(false);
+const clients = ref([]);
+const isLoading = ref(true);
+const articles = ref([]);
 const article = ref({
   nom: "",
   description: "",
@@ -88,17 +104,59 @@ const addArticle = async () => {
         Authorization: `Bearer ${authToken}`,
       },
     });
-    location.reload();
-    console.log("Article added successfully");
+    getArticles();
     visible.value = false;
+    toast.add({
+      severity: "success",
+      summary: "Article Ajoutée avec succès",
+      life: 5000,
+    });
   } catch (error) {
     console.log(error);
+    toast.add({
+      severity: "error",
+      summary: "Erreur lors de l'ajout de l'article",
+      life: 5000,
+    });
+  }
+};
+
+const getClients = async () => {
+  try {
+    const authToken = localStorage.getItem("token");
+
+    const response = await axios.get("/api/client", {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    clients.value = response.data;
+    isLoading.value = false;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const getArticles = async () => {
+  try {
+    const authToken = localStorage.getItem("token");
+
+    const response = await axios.get("/api/article", {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    articles.value = response.data;
+    isLoading.value = false;
+  } catch (error) {
+    console.error(error);
   }
 };
 
 onMounted(() => {
-  // Additional logic on component mount if needed
+  getClients();
 });
+
 
 const handleFilePondInit = () => {
   console.log("FilePond has initialized");
@@ -132,6 +190,7 @@ const serverOptions = () => {
     },
   };
 };
+
 </script>
 
 <style scoped>

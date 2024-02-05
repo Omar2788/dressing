@@ -18,9 +18,8 @@ class ClientController extends Controller
     
             return response()->json($clients, 200);
         } catch (\Exception $e) {
-            // Log the error for debugging purposes
     
-            return response()->json(['error' => 'Errorr fetching user meals.'], 500);
+            return response()->json(['error' => 'Errorr fetching user clients.'], 500);
         }
        
     }

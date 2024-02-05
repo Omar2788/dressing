@@ -11,7 +11,7 @@
         <div class="collapse navbar-collapse" :class="{ 'show': isNavbarOpen }">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <router-link class="nav-link" to="/home"><img data-v-082ea05c="" src="https://www.iconpacks.net/icons/1/free-home-icon-189-thumb.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Acceuil</router-link>
+              <router-link class="nav-link" to="/home"><img data-v-082ea05c="" src="https://www.iconpacks.net/icons/1/free-home-icon-189-thumb.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Dépôt</router-link>
             </li>
             <li v-if="isLoggedIn" class="nav-item">
               <router-link class="nav-link" to="/Clients"><img src="../images/clientes.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Mes Clients</router-link>
