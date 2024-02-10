@@ -6,15 +6,14 @@
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <router-link class="navbar-brand" to="/home"><img src="../images/dressing.png" alt="" style="width: 35px;height: 35px;margin-top: -5px;"> Ton Dressing.</router-link>
-
+        <router-link class="navbar-brand" to="/"><img src="../images/dressing.png" alt="" style="width: 35px;height: 35px;margin-top: -5px;"> Mon Dressing.</router-link>
         <div class="collapse navbar-collapse" :class="{ 'show': isNavbarOpen }">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <router-link class="nav-link" to="/home"><img data-v-082ea05c="" src="https://www.iconpacks.net/icons/1/free-home-icon-189-thumb.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Dépôt</router-link>
+              <router-link class="nav-link" to="/"><img data-v-082ea05c="" src="../images/article.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Dépôt</router-link>
             </li>
             <li v-if="isLoggedIn" class="nav-item">
-              <router-link class="nav-link" to="/Clients"><img src="../images/clientes.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Mes Clients</router-link>
+              <router-link class="nav-link" to="/Clients"><img src="../images/clientes.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Mes Clientes</router-link>
             </li>
             <li v-if="isLoggedIn" class="nav-item">
               <router-link class="nav-link" to="/favoritemeals"><img src="../images/article.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Les Articles</router-link>
@@ -90,5 +89,13 @@ const logout = async () => {
 .nav-item :hover{
   color: black;
   font-weight:600;
+}
+.navbar{
+  border-bottom: 2px solid rgb(194, 156, 194);
+}
+.navbar-brand{
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: rgb(110, 0, 110);
 }
 </style>

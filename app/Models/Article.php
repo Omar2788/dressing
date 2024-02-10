@@ -14,6 +14,7 @@ class Article extends Model
         'proprietaire',
         'status',
         'image',
+        'prix',
         'user_id',
         
     ];

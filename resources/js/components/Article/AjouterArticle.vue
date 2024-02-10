@@ -1,45 +1,51 @@
 <template>
   <div>
-    <button type="button" class="btn rounded-circle new-button" @click="visible = true">
+    <button type="button" class="btn-ajout-article" @click="visible = true">
       <span style="color: rgb(43, 27, 27)">
         <i class="bi bi-plus-circle" style="color: white;"></i>
       </span>
       Nouveau Dépôt
     </button>
     <form>
-      <Dialog v-model:visible="visible">
+      <Dialog v-model:visible="visible" header="Ajouter un nouvel article">
+        <hr>
         <div class="dialog">
           <div class="row">
             <div class="col-md-6">
               <label for="nom" class="form-label">Nom de l'article :</label>
-              <input type="text" class="form-control" id="nom" v-model="article.nom" />
+              <input type="text" class="form-control" id="nom" v-model="article.nom" required/>
             </div>
           </div>
           <div class="row">
             <div class="col-md-12">
               <label for="description" class="form-label">Déscription de l'article :</label>
-              <textarea type="text" class="form-control" id="description" v-model="article.description" />
+              <textarea type="text" class="form-control" id="description" v-model="article.description" required/>
             </div>
           </div>
           <div class="row">
             <div class="col-md-6">
               <label for="proprietaire" class="form-label">Propriétaire :</label>
-        <!-- Use the <select> element for the dropdown -->
-        <select class="form-select" id="proprietaire" v-model="article.proprietaire">
-          <option value="" disabled selected>Select owner</option>
-          <!-- Loop through clients and populate the dropdown -->
-          <option v-for="client in clients" :key="client.id" :value="client.nom">{{ client.nom }}</option>
-        </select>
-      </div>
+              <input list="proprietaireList" class="form-control" id="proprietaire" v-model="article.proprietaire" required>
+              <datalist id="proprietaireList">
+                  <option v-for="client in clients" :key="client.id" :value="client.nom">{{ client.nom }}</option>
+              </datalist>
+            </div>
             <div class="col-md-6">
               <label for="status" class="form-label">Status :</label>
-              <select class="form-select" id="status" v-model="article.status">
+              <select class="form-select" id="status" v-model="article.status" required>
                 <option value="disponible">Disponible</option>
                 <option value="vendu">Vendu</option>
               </select>
             </div>
           </div>
           <div class="row">
+            <div class="col-md-6">
+              <label for="prix" class="form-label">Prix :</label>
+              <input type="number" class="form-control" id="prix" v-model="article.prix" required/>
+            </div>
+          </div>
+          <div class="row">
+            <p>L'image de l'article est optionnel</p>
             <file-pond
               name="articleImage"
               ref="pond"
@@ -53,12 +59,12 @@
           </div>
           <hr />
           <br />
-          <button type="submit" class="btn btn-outline-primary" @click="addArticle">
-              <i class="bi bi-floppy"></i> Save
+          <button type="submit" class="btn btn-success" @click="addArticle">
+              <i class="bi bi-floppy"></i> Enregistrer
             </button>
             
-            <button type="button" class="btn btn-outline-primary" @click="cancel">
-              <i class="bi bi-x-lg"></i> Cancel
+            <button type="button" class="btn btn-light" @click="cancel">
+              <i class="bi bi-x-lg"></i> Annuler
             </button> </div>
       </Dialog>
     </form>
@@ -68,6 +74,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { defineEmits } from 'vue';
 import vueFilePond from "vue-filepond";
 import "filepond/dist/filepond.min.css";
 import Dialog from "primevue/dialog";
@@ -87,35 +94,45 @@ const visible = ref(false);
 const clients = ref([]);
 const isLoading = ref(true);
 const articles = ref([]);
+const authToken = localStorage.getItem("token");
 const article = ref({
   nom: "",
   description: "",
   proprietaire: "",
   status: "disponible",
+  prix:"",
   image: "",
 });
+const emits = defineEmits(['articleAdded']);
 
 const addArticle = async () => {
   try {
-    console.log(article.value);
-    const authToken = localStorage.getItem("token");
     await axios.post("/api/article", article.value, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
     });
-    getArticles();
+    emits('articleAdded');
+    article.value = {
+      nom: "",
+      description: "",
+      proprietaire: "",
+      status: "disponible",
+      prix:"",
+      image: "",
+    };
     visible.value = false;
     toast.add({
       severity: "success",
       summary: "Article Ajoutée avec succès",
       life: 5000,
     });
+
   } catch (error) {
-    console.log(error);
     toast.add({
       severity: "error",
-      summary: "Erreur lors de l'ajout de l'article",
+      summary: "Ajout de l'article est échoué",
+      detail: "Veuillez verifier les champs vide",
       life: 5000,
     });
   }
@@ -124,7 +141,6 @@ const addArticle = async () => {
 const getClients = async () => {
   try {
     const authToken = localStorage.getItem("token");
-
     const response = await axios.get("/api/client", {
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -137,30 +153,10 @@ const getClients = async () => {
   }
 };
 
-const getArticles = async () => {
-  try {
-    const authToken = localStorage.getItem("token");
-
-    const response = await axios.get("/api/article", {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
-    articles.value = response.data;
-    isLoading.value = false;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
 onMounted(() => {
   getClients();
+ 
 });
-
-
-const handleFilePondInit = () => {
-  console.log("FilePond has initialized");
-};
 
 const cancel = () => {
   visible.value = false;
@@ -194,25 +190,28 @@ const serverOptions = () => {
 </script>
 
 <style scoped>
-.new-button-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-}
 
-button {
+label{
+  margin-top: 5px;
+  font-weight: 600;
+  color: rgb(59, 0, 59);
+}
+.btn-ajout-article {
+  background-color: rgb(170, 22, 170);
+  color: white;
+  border: none;
   float: right;
-  background-color: rgb(141, 147, 187);
-  color: white;
-  border-color: rgb(141, 147, 187);
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
 }
-
-button:hover {
-  background-color: rgb(64, 74, 138);
+.btn-ajout-article:hover {
+  background-color: rgb(110, 0, 110);
   color: white;
-  border-color: rgb(141, 147, 187);
 }
-
 .dialog {
   width: 500px;
   max-width: 100%;

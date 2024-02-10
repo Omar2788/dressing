@@ -58,18 +58,16 @@ const toast = useToast();
   const handleLogin = async () => {
     try {
       const response = await axios.post('http://localhost:8000/api/login/', user);
-      console.log(response);
-      router.push("/home");
+      router.push("/");
       localStorage.setItem('user', response.data.user.name);
       localStorage.setItem('token', response.data.token);
       toast.add({
         severity: "success",
         summary: "Login Successful",
-        detail: "Welcome to Meal App",
+        detail: "Welcome to Dressing App",
         life: 3000,
       });
     } catch (error) {
-      console.log(error);
       toast.add({
         severity: "error",
         summary: "Login Error, Please Try Again",

@@ -41,5 +41,26 @@ class ClientController extends Controller
     
         return response()->json($client, 200);
     }
+
+    public function deleteClient($id)
+    {
+        $user = Auth::user();
+        $client = $user->client()->find($id);
+        
+        if (!$client) {
+            return response()->json(['error' => 'client not found.'], 404);
+        }
+    
+        $client->delete();
+    
+        return response()->json('client deleted successfully.');
+    }
+
+    public function updateClient($id, Request $request)
+    {
+        $client= client::find($id);
+        $client->update($request->all());
+        return response()->json('client updated successfully');
+    }
    
 }

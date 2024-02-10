@@ -1,28 +1,29 @@
 <template>
   <div>
-    <button type="button" class="btn rounded-circle new-button" @click="visible = true">
+    <button type="button" class="btn-ajout-client" @click="visible = true">
       <span style="color: rgb(43, 27, 27)">
         <i class="bi bi-plus-circle" style="color: white;"></i>
       </span>
-      Nouveau Client
+      Nouvelle Cliente
     </button>
     <form>
-      <Dialog v-model:visible="visible">
+      <Dialog v-model:visible="visible" header="Ajouter une nouvelle cliente" >
+        <hr>
         <div class="dialog">
           <div class="row">
             <div class="col-md-6">
-              <label for="nom" class="form-label">Nom du client :</label>
+              <label for="nom" class="form-label">Nom de cliente :</label>
               <input type="text" class="form-control" id="nom" v-model="client.nom" />
             </div>
           
             <div class="col-md-6">
-              <label for="prenom" class="form-label">Prénom du client :</label>
+              <label for="prenom" class="form-label">Prénom de cliente :</label>
               <input type="text" class="form-control" id="prenom" v-model="client.prenom" />
             </div>
           </div>
           <div class="row">
             <div class="col-md-12">
-              <label for="description" class="form-label">Description du client :</label>
+              <label for="description" class="form-label">Déscription de cliente :</label>
               <textarea type="text" class="form-control" id="description" v-model="client.description" />
             </div>
           </div>
@@ -38,7 +39,7 @@
               name="clientImage"
               ref="pond"
               class-name="my-pond"
-              label-idle="Ajouter image du client..."
+              label-idle="Ajouter image de cliente..."
               allow-multiple="false"
               accepted-file-types="image/jpeg, image/png"
               v-bind:files="myFiles"
@@ -48,11 +49,11 @@
           <hr />
           <br />
           
-            <button type="submit" class="btn btn-outline-primary" @click="addClient">
+            <button type="submit" class="btn btn-success" @click="addClient">
               <i class="bi bi-floppy"></i> Enregistrer
             </button>
 
-            <button type="button" class="btn btn-outline-primary" @click="cancel">
+            <button type="button" class="btn btn-light" @click="cancel">
               <i class="bi bi-x-lg"></i> Annuler
             </button>
          
@@ -60,19 +61,25 @@
       </Dialog>
     </form>
   </div>
+  <Toast/>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { defineEmits } from 'vue';
 import vueFilePond from "vue-filepond";
 import "filepond/dist/filepond.min.css";
 import Dialog from "primevue/dialog";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
+import axios from "axios";
+import { useToast } from "primevue/usetoast";
+import Toast from "primevue/toast";
 const FilePond = vueFilePond(FilePondPluginImagePreview);
 const myFiles = ref([]);
-import axios from "axios";
 const visible = ref(false);
+const toast = useToast();
+const emits = defineEmits(['clientAdded']);
 const client = ref({
   nom: "",
   prenom: "",
@@ -83,23 +90,38 @@ const client = ref({
 
 const addClient = async () => {
   try {
-    console.log(client.value);
     const authToken = localStorage.getItem("token");
     await axios.post("/api/client", client.value, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
     });
-    location.reload();
+    emits('clientAdded');
+    client.value = {
+      nom: "",
+      prenom: "",
+      description: "",
+      num: "",
+      image: "",
+    };
+    toast.add({
+      severity: "success",
+      summary: "Cliente ajouté avec succès",
+      life: 3000,
+    });
     console.log("Client added successfully");
     visible.value = false;
   } catch (error) {
     console.log(error);
+    toast.add({
+      severity: "error",
+      summary: "Erreur lors de l'ajout de cliente",
+      life: 3000,
+    });
   }
 };
 
 onMounted(() => {
-  // Additional logic on component mount if needed
 });
 
 const handleFilePondInit = () => {
@@ -137,30 +159,31 @@ const serverOptions = () => {
 </script>
 
 <style scoped>
-.new-button-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-}
-
-button {
+.btn-ajout-client {
+  background-color: rgb(170, 22, 170);
+  color: white;
+  border: none;
   float: right;
-  background-color: rgb(141, 147, 187);
-  color: white;
-  border-color: rgb(141, 147, 187);
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
 }
-
-button:hover {
-  background-color: rgb(64, 74, 138);
+.btn-ajout-client:hover {
+  background-color: rgb(110, 0, 110);
   color: white;
-  border-color: rgb(141, 147, 187);
 }
-
 .dialog {
   width: 500px;
   max-width: 100%;
 }
-
+label{
+  margin-top: 5px;
+  font-weight: 600;
+  color: rgb(59, 0, 59);
+}
 .dialog .row {
   margin-bottom: 10px;
 }
