@@ -27,7 +27,7 @@
               <label for="proprietaire" class="form-label">Propriétaire :</label>
               <input list="proprietaireList" class="form-control" id="proprietaire" v-model="article.proprietaire" required>
               <datalist id="proprietaireList">
-                  <option v-for="client in clients" :key="client.id" :value="client.nom">{{ client.nom }}</option>
+                <option v-for="client in clients" :key="client.id" :value="`${client.nom} ${client.prenom}`">{{ `${client.nom} ${client.prenom}` }}</option>
               </datalist>
             </div>
             <div class="col-md-6">
@@ -129,6 +129,7 @@ const addArticle = async () => {
     });
 
   } catch (error) {
+    console.error(error);
     toast.add({
       severity: "error",
       summary: "Ajout de l'article est échoué",

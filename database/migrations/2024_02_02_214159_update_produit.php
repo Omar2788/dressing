@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('proprietaire');
             $table->string('status');
             $table->string('image')->nullable();
+            $table->integer('prix');
             $table->timestamps();
             $table->foreignId('user_id')->constrained();
         });

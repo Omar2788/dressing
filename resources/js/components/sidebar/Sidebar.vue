@@ -13,7 +13,7 @@
               <router-link class="nav-link" to="/"><img data-v-082ea05c="" src="../images/article.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Dépôt</router-link>
             </li>
             <li v-if="isLoggedIn" class="nav-item">
-              <router-link class="nav-link" to="/Clients"><img src="../images/clientes.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Mes Clientes</router-link>
+              <router-link class="nav-link" to="/Clients"><img src="../images/clientes.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Mes déposantes</router-link>
             </li>
             <li v-if="isLoggedIn" class="nav-item">
               <router-link class="nav-link" to="/favoritemeals"><img src="../images/article.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Les Articles</router-link>
@@ -69,16 +69,16 @@ const logout = async () => {
     router.push("/login");
     toast.add({
       severity: "success",
-      summary: "Logout Successful",
-      detail: "You have been logged out",
+      summary: "Déconnexion réussie",
+      detail: "Tu es déconnecté",
       life: 3000,
     });
   } catch (error) {
     console.error(error);
     toast.add({
       severity: "error",
-      summary: "Logout Error, Please Try Again",
-      detail: "Something went wrong",
+      summary: "Erreur de déconnexion",
+      detail: "Erreur de déconnexion, veuillez réessayer.",
       life: 3000,
     });
   }

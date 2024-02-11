@@ -12,6 +12,11 @@
           <AjouterArticle @articleAdded="handleArticleAdded" />
         </div>
       </template>
+      <Column>
+      <template #body="{ data }">
+  <input type="checkbox" v-model="selectedArticles" :value="data" />
+</template>
+</Column>
       <Column field="image" header="Image" sortable :filter="true">
         <template #body="{ data }">
           <img v-if="data.image" :src="data.image" alt="image" class="imagearticle" />
@@ -68,10 +73,10 @@
         <div class="row">
           <div class="col-md-6">
             <label for="proprietaire" class="form-label">Propriétaire :</label>
-            <select class="form-select" id="proprietaire" v-model="selectedArticle.proprietaire">
-              <option value="" disabled selected>Proprietaire</option>
-              <option v-for="client in clients" :key="client.id" :value="client.nom">{{ client.nom }}</option>
-            </select>
+            <input list="proprietaireList" class="form-control" id="proprietaire" v-model="selectedArticle.proprietaire" required>
+              <datalist id="proprietaireList">
+                <option v-for="client in clients" :key="client.id" :value="`${client.nom} ${client.prenom}`">{{ `${client.nom} ${client.prenom}` }}</option>
+              </datalist>
           </div>
           <div class="col-md-6">
             <label for="status" class="form-label">Status :</label>
@@ -158,6 +163,7 @@ const authToken = localStorage.getItem('token');
 const clients = ref([]);
 const myFiles = ref([]);
 const reversedArticles = ref([]);
+const selectedArticles = ref([]);
 
 const getArticles = async () => {
   try {
@@ -206,18 +212,32 @@ const deleteArticle = async (id) => {
     });
 
     if (result.isConfirmed) {
-      const authToken = localStorage.getItem("token");
-      await axios.delete(`/api/article/${id}`, {
+      if (selectedArticles.value.length === 0) {
+        await axios.delete(`/api/article/${id}`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+        getArticles();
+      toast.add({
+        severity: "success",
+        summary: "Article supprimée avec succès",
+        life: 5000,
+      });}
+      else {
+      for (const article of selectedArticles.value) {
+      await axios.delete(`/api/article/${article.id}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
-      });
+      });}
+      selectedArticles.value = [];
       getArticles();
       toast.add({
         severity: "success",
         summary: "Article supprimée avec succès",
         life: 5000,
-      });
+      });}
     }
   } catch (error) {
     console.error(error);
@@ -333,15 +353,24 @@ abort();
 };
 
 const printReceipt = (article) => {
-  const printWindow = window.open('', '', 'width=300,height=400'); // Adjust width and height as per your ticket size
+  console.log(selectedArticles.value);
+  if (selectedArticles.value.length ===0){
+    const finalPrice = article.prix * 0.8;
+  const printWindow = window.open('', '', 'width=400,height=400');
   printWindow.document.write(`
     <html>
       <head>
         <title>Reçu de dépôt</title>
         <style>
+        @page {
+            size: auto;  
+            margin: 5mm; 
+          }
           body {
             font-family: Arial, sans-serif;
-            font-size: 12px; /* Adjust font size as needed */
+            font-size: 12px; 
+            margin: 0; 
+            padding: 0; 
           }
           .receipt {
             width: 100%;
@@ -362,6 +391,7 @@ const printReceipt = (article) => {
         </style>
       </head>
       <body>
+        
         <div class="receipt">
           <div class="receipt-header">
             <h1>Reçu de dépôt</h1>
@@ -377,7 +407,10 @@ const printReceipt = (article) => {
               <span><strong>Déscription:</strong> ${article.description}</span>
             </div>
             <div class="receipt-item">
-              <span><strong>Prix:</strong> ${article.prix} <strong>Dt</strong></span>
+              <span><strong>Prix demandé:</strong> ${article.prix} <strong>Dt</strong></span>
+            </div>
+            <div class="receipt-item">
+              <span><strong>Prix final:</strong> ${finalPrice} <strong>Dt</strong></span>
             </div>
             <div class="receipt-item">
               <span><strong>Date de dépôt:</strong> ${formatDate(article.created_at)} ${formatTime(article.created_at)}</span>
@@ -387,8 +420,96 @@ const printReceipt = (article) => {
       </body>
     </html>
   `);
+  } else {
+  selectedArticles.value.forEach(article => {
+  const finalPrice = article.prix * 0.8;
+  const printWindow = window.open('', '', 'width=400,height=400');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Reçu de dépôt</title>
+        <style>
+        @page {
+            size: auto;  
+            margin: 5mm; 
+          }
+          body {
+            font-family: Arial, sans-serif;
+            font-size: 12px; 
+            margin: 0; 
+            padding: 0; 
+          }
+          .receipt {
+            width: 100%;
+            border: 2px solid #000;
+            padding: 10px;
+            box-sizing: border-box;
+          }
+          .receipt-header {
+            text-align: center;
+            margin-bottom: 10px;
+          }
+          .receipt-content {
+            margin-bottom: 10px;
+          }
+          .receipt-content table {
+            font-size: small;
+            border-collapse: collapse;
+          }
+          th, td {
+            border: 1px solid #b5b5b5 ;
+            padding: 3px; 
+            text-align: left;
+          }
+          .receipt-item {
+            margin-bottom: 5px;
+            font-size: 8px;
+
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="receipt-header">
+            <h1>Reçu de dépôt</h1>
+            <h3>Le propriétaire est : ${article.proprietaire}</h3>
+          </div>
+          <div class="receipt-content">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nom de l'article</th>
+                  <th>Description</th>
+                  <th>Prix demandé</th>
+                  <th>Prix final</th>
+                  <th>Date de dépôt</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                ${selectedArticles.value.map(article => `
+                  <tr>
+                    <td>${article.nom}</td>
+                    <td>${article.description}</td>
+                    <td>${article.prix} Dt</td>
+                    <td>${(article.prix * 0.8)} Dt</td>
+                    <td>${formatDate(article.created_at)} ${formatTime(article.created_at)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <p>Le total du prix final est : ${
+              selectedArticles.value.reduce((total, article) => total + (article.prix * 0.8), 0).toFixed(2)
+            } Dt</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
   printWindow.document.close();
   printWindow.print();
+  });
+  }
 };
 
 

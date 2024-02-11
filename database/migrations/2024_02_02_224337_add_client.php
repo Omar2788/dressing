@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('prenom');
             $table->string('description');
             $table->string('num');
-            $table->string('image');
+            $table->string('image')->nullable();
             $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });
