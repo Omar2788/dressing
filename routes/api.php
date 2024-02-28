@@ -24,7 +24,7 @@ Route::put('/client/{id}', [ClientController::class,'updateClient']);
 
 Route::get('/article', [ArticleController::class,'userArticles']);
 Route::delete('/client/{id}', [ClientController::class,'deleteClient']);
-
+Route::get('articles', [ArticleController::class, 'displayChart']);
 Route::middleware('auth:sanctum')->get('/article', [ArticleController::class,'userArticles']);
 Route::middleware('auth:sanctum')->post('/client', [ClientController::class, 'addClient']);
 Route::middleware('auth:sanctum')->get('/client', [ClientController::class,'index']);

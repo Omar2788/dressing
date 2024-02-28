@@ -22,7 +22,7 @@
               <router-link class="nav-link" to="/favoritemeals"><img src="../images/articles.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Les Articles Vendus</router-link>
             </li>
             <li v-if="isLoggedIn" class="nav-item">
-              <router-link class="nav-link" to="/favoritemeals"><img src="../images/stat.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Les Statistiques</router-link>
+              <router-link class="nav-link" to="/statistique"><img src="../images/stat.png" alt="" style="width: 25px;height: 25px;margin-top: -5px;"> Les Statistiques</router-link>
             </li>
           </ul>
 

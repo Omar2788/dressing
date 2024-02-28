@@ -55,17 +55,44 @@ class ArticleController extends Controller
 
 
     public function deleteArticle($id)
-{
-    $user = Auth::user();
-    $article = $user->article()->find($id);
-    
-    if (!$article) {
-        return response()->json(['error' => 'article not found.'], 404);
+    {
+        $user = Auth::user();
+        $article = $user->article()->find($id);
+        
+        if (!$article) {
+            return response()->json(['error' => 'article not found.'], 404);
+        }
+
+        $article->delete();
+
+        return response()->json('article deleted successfully.');
     }
 
-    $article->delete();
+    public function displayChart(Request $request)
+    {
+        try {
+            // Fetch articles sold and available within the selected period
+            $startDate = $request->input('startDate');
+            $endDate = $request->input('endDate');
 
-    return response()->json('article deleted successfully.');
-}
+            $soldArticlesCount = Article::where('status', 'vendu')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+
+            $availableArticlesCount = Article::where('status', 'disponible')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+
+            // Prepare data for the chart
+            $chartData = [
+                'vendu' => $soldArticlesCount,
+                'disponible' => $availableArticlesCount,
+            ];
+
+            return response()->json($chartData, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error fetching chart data.'], 500);
+        }
+    }
 
 }

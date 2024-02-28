@@ -6,6 +6,7 @@ import ForgotPassword from "./components/auth/ForgotPassword.vue"
 import Home from "./components/Home/Home.vue"
 import Sidebar from "./components/sidebar/Sidebar.vue"
 import Clients from "./components/Article/Clients.vue"
+import Statistique from "./components/Statistique/Statistique.vue"
 export const routes=[
   
     // {
@@ -40,12 +41,17 @@ export const routes=[
         meta:{isAuth:true}
       },
       {
-       
-    name: 'clients',
-    path: '/clients',
+        name: 'clients',
+        path: '/clients',
         component: Clients,
-        meta: { isAuth: true }, // Add this if authentication is required
-      },
+        meta: { isAuth: true }, 
+    },
+    {
+        name: 'statistique',
+        path: '/statistique',
+        component: Statistique,
+        meta: { isAuth: true }, 
+    }
       
        
        

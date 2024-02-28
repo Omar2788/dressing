@@ -17,6 +17,7 @@
         "bootstrap": "^5.3.2",
         "bootstrap-icons": "^1.11.2",
         "bootstrap-vue": "^2.23.1",
+        "chart.js": "^4.4.1",
         "filepond": "^4.30.6",
         "filepond-plugin-image-preview": "^4.6.12",
         "font-awesome": "^4.7.0",
