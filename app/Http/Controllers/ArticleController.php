@@ -71,7 +71,6 @@ class ArticleController extends Controller
     public function displayChart(Request $request)
     {
         try {
-            // Fetch articles sold and available within the selected period
             $startDate = $request->input('startDate');
             $endDate = $request->input('endDate');
 
@@ -83,13 +82,49 @@ class ArticleController extends Controller
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count();
 
-            // Prepare data for the chart
             $chartData = [
                 'vendu' => $soldArticlesCount,
                 'disponible' => $availableArticlesCount,
             ];
 
             return response()->json($chartData, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error fetching chart data.'], 500);
+        }
+    }
+
+    public function articlesVendu(Request $request)
+    {
+        try {
+            $startDate = $request->input('startDate');
+            $endDate = $request->input('endDate');
+
+             //send just the prix of the articles vendu
+            $articlesVendu = Article::where('status', 'vendu')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get(['prix']);
+
+            return response()->json($articlesVendu, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error fetching articles vendu.'], 500);
+        }
+    }
+
+    public function displayPie(Request $request)
+    {
+        try {
+            $soldArticlesCount = Article::where('status', 'vendu')
+                ->count();
+
+            $availableArticlesCount = Article::where('status', 'disponible')
+                ->count();
+
+            $pieData = [
+                'vendu' => $soldArticlesCount,
+                'disponible' => $availableArticlesCount,
+            ];
+
+            return response()->json($pieData, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error fetching chart data.'], 500);
         }

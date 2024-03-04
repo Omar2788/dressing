@@ -24,12 +24,14 @@ Route::put('/client/{id}', [ClientController::class,'updateClient']);
 
 Route::get('/article', [ArticleController::class,'userArticles']);
 Route::delete('/client/{id}', [ClientController::class,'deleteClient']);
-Route::get('articles', [ArticleController::class, 'displayChart']);
+Route::get('articles', [ArticleController::class, 'displayChart']);//to display the number of articles in the chart
+Route::get('articlesVendu', [ArticleController::class, 'articlesVendu']);//to display the number od articles vendu to calculate the total prive
+Route::get('PieArticles', [ArticleController::class, 'displayPie']);//to display the piechart
+
 Route::middleware('auth:sanctum')->get('/article', [ArticleController::class,'userArticles']);
 Route::middleware('auth:sanctum')->post('/client', [ClientController::class, 'addClient']);
 Route::middleware('auth:sanctum')->get('/client', [ClientController::class,'index']);
 Route::middleware('auth:sanctum')->post('/article', [ArticleController::class, 'store']);
-Route::middleware('auth:sanctum')->post('/favoritemeals', [ArticleController::class, 'addToFavorite']);
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class,'logout']);
 Route::middleware('auth:sanctum')->put('/article/{id}', [ArticleController::class, 'updateArticle']);
 Route::middleware('auth:sanctum')->put('/client/{id}', [ClientController::class, 'updateClient']);
